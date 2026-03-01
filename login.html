@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AstroFit ✦ Enter the Universe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --gold: #f0c060;
+      --gold-dim: #c89a3a;
+      --star: #fffbe6;
+      --bg-deep: #07080f;
+      --bg-card: rgba(15, 17, 35, 0.92);
+      --border: rgba(240, 192, 96, 0.18);
+      --text: #e8e0f0;
+      --text-dim: #8a82a0;
+      --error: #ff6b8a;
+      --success: #60d0a0;
+      --glow: rgba(240, 192, 96, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text);
+      font-family: 'Raleway', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Starfield */
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle var(--d, 3s) ease-in-out infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.1; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+
+    /* Nebula glow background */
+    .nebula {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 30% 60%, rgba(80, 30, 120, 0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 70% 30%, rgba(20, 60, 140, 0.2) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 50% 80%, rgba(120, 40, 60, 0.15) 0%, transparent 70%);
+    }
+
+    /* Card */
+    .card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      margin: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2.2rem 2.2rem;
+      backdrop-filter: blur(24px);
+      box-shadow:
+        0 0 0 1px rgba(240,192,96,0.07),
+        0 8px 40px rgba(0,0,0,0.6),
+        0 0 80px rgba(80,30,120,0.15);
+      animation: fadeUp 0.7s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Logo */
+    .logo {
+      text-align: center;
+      margin-bottom: 1.8rem;
+    }
+    .logo-symbol {
+      font-size: 2.4rem;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 0.4rem;
+      animation: pulse 2.5s ease-in-out infinite;
+      text-shadow: 0 0 20px rgba(240,192,96,0.5);
+    }
+    @keyframes pulse {
+      0%, 100% { text-shadow: 0 0 15px rgba(240,192,96,0.4); }
+      50% { text-shadow: 0 0 35px rgba(240,192,96,0.9); }
+    }
+    .logo-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+    }
+    .logo-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 1.8rem;
+    }
+    .tab {
+      flex: 1;
+      padding: 0.55rem;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      color: var(--text-dim);
+      border: none;
+      background: transparent;
+    }
+    .tab.active {
+      background: rgba(240,192,96,0.12);
+      color: var(--gold);
+      box-shadow: 0 0 12px rgba(240,192,96,0.1);
+    }
+
+    /* Form */
+    .form { display: flex; flex-direction: column; gap: 1rem; }
+    .form-panel { display: none; }
+    .form-panel.active { display: flex; flex-direction: column; gap: 1rem; }
+
+    .field label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.4rem;
+    }
+    .field input {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(240,192,96,0.15);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .field input::placeholder { color: rgba(138,130,160,0.5); }
+    .field input:focus {
+      border-color: rgba(240,192,96,0.45);
+      background: rgba(240,192,96,0.04);
+      box-shadow: 0 0 0 3px rgba(240,192,96,0.08);
+    }
+
+    /* Submit button */
+    .btn {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, #c89a3a 0%, #f0c060 50%, #c89a3a 100%);
+      background-size: 200% 200%;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #0a0a14;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 0.3rem;
+      animation: shimmer 3s ease infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(240,192,96,0.35);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Message */
+    .message {
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      display: none;
+      font-weight: 500;
+    }
+    .message.error {
+      display: block;
+      background: rgba(255,107,138,0.1);
+      border: 1px solid rgba(255,107,138,0.25);
+      color: var(--error);
+    }
+    .message.success {
+      display: block;
+      background: rgba(96,208,160,0.1);
+      border: 1px solid rgba(96,208,160,0.25);
+      color: var(--success);
+    }
+
+    /* Divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(10,10,20,0.3);
+      border-top-color: #0a0a14;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Logged-in state */
+    .user-greeting {
+      display: none;
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+    }
+    .user-greeting .rank-badge {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0.25rem 0.9rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    .user-greeting h2 {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+    .user-greeting p {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 1.4rem;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 0.4rem;
+      text-align: center;
+    }
+    .stat-box .val {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      color: var(--gold);
+    }
+    .stat-box .lbl {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 0.15rem;
+    }
+    .xp-bar-wrap {
+      background: rgba(255,255,255,0.06);
+      border-radius: 6px;
+      height: 6px;
+      overflow: hidden;
+      margin: 0.6rem 0 0.3rem;
+    }
+    .xp-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+      border-radius: 6px;
+      transition: width 0.8s ease;
+    }
+    .xp-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+    .btn-outline {
+      width: 100%;
+      padding: 0.7rem;
+      background: transparent;
+      border: 1px solid rgba(240,192,96,0.25);
+      border-radius: 10px;
+      font-family: 'Raleway', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-outline:hover {
+      border-color: rgba(240,192,96,0.5);
+      color: var(--gold);
+      background: rgba(240,192,96,0.05);
+    }
+
+    .launch-btn {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, #1a1060 0%, #2a0a60 100%);
+      border: 1px solid rgba(120,80,200,0.4);
+      border-radius: 10px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #d0b0ff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 0.6rem;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+    .launch-btn:hover {
+      background: linear-gradient(135deg, #2a1880 0%, #3a1080 100%);
+      box-shadow: 0 4px 20px rgba(120,80,200,0.3);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="stars" id="stars"></div>
+
+<div class="card">
+  <!-- Logo -->
+  <div class="logo">
+    <span class="logo-symbol">✦</span>
+    <div class="logo-title">AstroFit</div>
+    <div class="logo-sub">Train by the Stars · Move with the Universe</div>
+  </div>
+
+  <!-- Auth panel -->
+  <div id="authPanel">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Login</button>
+      <button class="tab" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- Login form -->
+    <div class="form-panel active" id="loginPanel">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="your@email.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" />
+      </div>
+      <div class="message" id="loginMsg"></div>
+      <button class="btn" id="loginBtn" onclick="handleLogin()">Enter the Universe</button>
+    </div>
+
+    <!-- Signup form -->
+    <div class="form-panel" id="signupPanel">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="signupName" placeholder="Cosmic Explorer" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="your@email.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="Min 6 characters" />
+      </div>
+      <div class="message" id="signupMsg"></div>
+      <button class="btn" id="signupBtn" onclick="handleSignup()">Begin My Journey</button>
+    </div>
+  </div>
+
+  <!-- Logged-in panel -->
+  <div class="user-greeting" id="userGreeting">
+    <div class="rank-badge" id="userRank">Cosmic Beginner</div>
+    <h2>Welcome back, <span id="userName"></span> ✦</h2>
+    <p>The stars are aligned for your training today.</p>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="val" id="userXP">0</div>
+        <div class="lbl">Total XP</div>
+      </div>
+      <div class="stat-box">
+        <div class="val" id="userStreak">0</div>
+        <div class="lbl">🔥 Streak</div>
+      </div>
+      <div class="stat-box">
+        <div class="val" id="userBadges">0</div>
+        <div class="lbl">✦ Badges</div>
+      </div>
+    </div>
+
+    <div class="xp-bar-wrap">
+      <div class="xp-bar" id="xpBar" style="width: 0%"></div>
+    </div>
+    <div class="xp-label" id="xpLabel">0 / 100 XP to next rank</div>
+
+    <a href="https://astrofitt.vercel.app" class="launch-btn">✦ Launch AstroFit</a>
+    <button class="btn-outline" onclick="handleLogout()">Sign Out</button>
+  </div>
+</div>
+
+<script>
+  // ─── CONFIG ───────────────────────────────────────────────
+  const API = "https://astrofit-backend-production-5509.up.railway.app";
+
+  // ─── STARS ────────────────────────────────────────────────
+  const starsEl = document.getElementById("stars");
+  for (let i = 0; i < 180; i++) {
+    const s = document.createElement("div");
+    s.className = "star";
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      width: ${size}px;
+      height: ${size}px;
+      --d: ${2 + Math.random() * 4}s;
+      --delay: ${Math.random() * 5}s;
+    `;
+    starsEl.appendChild(s);
+  }
+
+  // ─── TABS ─────────────────────────────────────────────────
+  function switchTab(tab) {
+    document.querySelectorAll(".tab").forEach((t, i) => {
+      t.classList.toggle("active", (i === 0 && tab === "login") || (i === 1 && tab === "signup"));
+    });
+    document.getElementById("loginPanel").classList.toggle("active", tab === "login");
+    document.getElementById("signupPanel").classList.toggle("active", tab === "signup");
+    clearMessages();
+  }
+
+  function clearMessages() {
+    ["loginMsg", "signupMsg"].forEach(id => {
+      const el = document.getElementById(id);
+      el.className = "message";
+      el.textContent = "";
+    });
+  }
+
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.className = "message " + type;
+    el.textContent = text;
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? `<span class="spinner"></span>Navigating...`
+      : btnId === "loginBtn" ? "Enter the Universe" : "Begin My Journey";
+  }
+
+  // ─── LOGIN ────────────────────────────────────────────────
+  async function handleLogin() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    if (!email || !password) return showMsg("loginMsg", "Please fill in all fields.", "error");
+
+    setLoading("loginBtn", true);
+    try {
+      const res = await fetch(`${API}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login failed");
+      saveSession(data.token);
+      await loadProfile();
+    } catch (err) {
+      showMsg("loginMsg", err.message, "error");
+    } finally {
+      setLoading("loginBtn", false);
+    }
+  }
+
+  // ─── SIGNUP ───────────────────────────────────────────────
+  async function handleSignup() {
+    const name = document.getElementById("signupName").value.trim();
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
+    if (!name || !email || !password) return showMsg("signupMsg", "Please fill in all fields.", "error");
+    if (password.length < 6) return showMsg("signupMsg", "Password must be at least 6 characters.", "error");
+
+    setLoading("signupBtn", true);
+    try {
+      const res = await fetch(`${API}/api/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Signup failed");
+      showMsg("signupMsg", "Account created! Logging you in... ✦", "success");
+      saveSession(data.token);
+      setTimeout(loadProfile, 800);
+    } catch (err) {
+      showMsg("signupMsg", err.message, "error");
+    } finally {
+      setLoading("signupBtn", false);
+    }
+  }
+
+  // ─── SESSION ──────────────────────────────────────────────
+  function saveSession(token) {
+    localStorage.setItem("astrofit_token", token);
+  }
+
+  function getToken() {
+    return localStorage.getItem("astrofit_token");
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("astrofit_token");
+    document.getElementById("authPanel").style.display = "block";
+    document.getElementById("userGreeting").style.display = "none";
+    clearMessages();
+  }
+
+  // ─── PROFILE ──────────────────────────────────────────────
+  async function loadProfile() {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API}/api/astrofit/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { handleLogout(); return; }
+      const data = await res.json();
+      showUserGreeting(data);
+    } catch {
+      // server not reachable — still show logged-in state with cached name
+    }
+  }
+
+  function showUserGreeting(profile) {
+    document.getElementById("authPanel").style.display = "none";
+    const greeting = document.getElementById("userGreeting");
+    greeting.style.display = "block";
+
+    document.getElementById("userName").textContent = profile.name;
+    document.getElementById("userRank").textContent = profile.rank || "Cosmic Beginner";
+    document.getElementById("userXP").textContent = profile.xp || 0;
+    document.getElementById("userStreak").textContent = profile.day_streak || 0;
+    document.getElementById("userBadges").textContent = (profile.badges || []).length;
+
+    const xp = profile.xp || 0;
+    const nextXP = profile.nextRankXP || 100;
+    const prevXP = getPrevRankXP(xp);
+    const pct = Math.min(100, ((xp - prevXP) / (nextXP - prevXP)) * 100);
+    document.getElementById("xpBar").style.width = pct + "%";
+    document.getElementById("xpLabel").textContent = `${xp} / ${nextXP} XP to next rank`;
+  }
+
+  function getPrevRankXP(xp) {
+    if (xp >= 2000) return 2000;
+    if (xp >= 1000) return 1000;
+    if (xp >= 500)  return 500;
+    if (xp >= 200)  return 200;
+    if (xp >= 100)  return 100;
+    return 0;
+  }
+
+  // Enter key support
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter") return;
+    const loginActive = document.getElementById("loginPanel").classList.contains("active");
+    if (loginActive) handleLogin();
+    else handleSignup();
+  });
+
+  // ─── INIT ─────────────────────────────────────────────────
+  if (getToken()) loadProfile();
+</script>
+</body>
+</html>
