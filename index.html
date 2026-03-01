@@ -360,6 +360,36 @@ footer { padding:56px 48px; border-top:1px solid var(--border); display:flex; ju
   box-shadow: 0 0 8px var(--gold);
 }
 
+<div id="authStatus" style="position:fixed;top:1rem;right:1rem;z-index:9999;">
+  <a href="/login.html" id="loginLink" style="
+    font-family: inherit;
+    font-size: 0.8rem;
+    color: #f0c060;
+    border: 1px solid rgba(240,192,96,0.3);
+    padding: 0.4rem 1.1rem;
+    border-radius: 20px;
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    background: rgba(240,192,96,0.07);">✦ Login</a>
+  <span id="loggedInUser" style="display:none;color:#f0c060;font-size:0.8rem;cursor:pointer;" onclick="window.location.href='/login.html'"></span>
+</div>
+
+<script>
+  const token = localStorage.getItem("astrofit_token");
+  if (token) {
+    fetch("https://astrofit-backend-production-5509.up.railway.app/api/astrofit/profile", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("loginLink").style.display = "none";
+      const userEl = document.getElementById("loggedInUser");
+      userEl.style.display = "inline";
+      userEl.textContent = `✦ ${data.name}`;
+    })
+    .catch(() => {});
+  }
+</script>
 /* ============================================================
    SECTION BACKGROUND COLOR TRANSITION (JS-driven via data-bg)
    ============================================================ */
