@@ -579,14 +579,14 @@
   }
 
   function handleLogout() {
-    localStorage.removeItem("astrofit_token");
-    document.getElementById("authPanel").style.display = "block";
-    document.getElementById("userGreeting").style.display = "none";
-    clearMessages();
-  }
-
+  localStorage.removeItem("astrofit_token");
+  localStorage.removeItem("astrofit_profile");  // ADD THIS LINE
+  document.getElementById("authPanel").style.display = "block";
+  document.getElementById("userGreeting").style.display = "none";
+  clearMessages();
+}
   // ─── PROFILE ──────────────────────────────────────────────
-  async function loadProfile() {
+ async function loadProfile() {
     const token = getToken();
     if (!token) return;
 
@@ -596,9 +596,15 @@
       });
       if (!res.ok) { handleLogout(); return; }
       const data = await res.json();
+      // Save profile data to localStorage as cache
+      localStorage.setItem("astrofit_profile", JSON.stringify(data));
       showUserGreeting(data);
-    } catch {
-      // server not reachable — still show logged-in state with cached name
+    } catch (error) {
+      // server not reachable — try to use cached profile data
+      const cached = localStorage.getItem("astrofit_profile");
+      if (cached) {
+        showUserGreeting(JSON.parse(cached));
+      }
     }
   }
 
